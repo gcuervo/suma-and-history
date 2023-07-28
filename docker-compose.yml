@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  challenge:
+    container_name: challenge
+    image: challenge:1.0.0
+    build:
+      context: ./challenge
+      dockerfile: dockerfile
+    ports:
+      - "8091:8091"
+      - "5005:5005"
+    environment:
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - DATASOURCE_USERNAME=postgres
+      - DATASOURCE_PASSWORD=postgres
+      - PERCENTAGE_API_BASE_PATH=http://172.17.0.1:8082/api
+      - PERCENTAGE_PATH=/percentage
+      - SPRING_REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+      
+  percentage:
+    container_name: percentage
+    image: percentage:1.0.0
+    build:
+      context: ./percentage
+      dockerfile: dockerfile
+    ports:
+      - "8082:8082"
+
+  postgres:
+    container_name: postgres
+    image: postgres:12
+    ports:
+      - "5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+
+volumes:
+  postgres-data:

@@ -1,0 +1,10 @@
+FROM maven:3.8.4 AS build
+WORKDIR /percentage
+COPY src ./src
+COPY pom.xml ./
+RUN mvn clean package -Dmaven.test.skip=true
+
+FROM openjdk:17-jdk-alpine
+ARG JAR_FILE=/percentage/target/*.jar
+COPY --from=build ${JAR_FILE} /percentage.jar
+ENTRYPOINT ["java", "-jar", "/percentage.jar"]
