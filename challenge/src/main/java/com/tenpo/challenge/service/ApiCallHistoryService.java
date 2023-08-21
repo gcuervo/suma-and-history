@@ -3,7 +3,9 @@ package com.tenpo.challenge.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tenpo.challenge.kafka.KafkaProducerService;
 import com.tenpo.challenge.model.dto.ApiCallHistoryDto;
+import com.tenpo.challenge.model.dto.ApiCallHistoryMessage;
 import com.tenpo.challenge.model.dto.ApiCallHistoryRequest;
 import com.tenpo.challenge.model.entity.ApiCallHistory;
 import com.tenpo.challenge.model.entity.ErrorResponse;
@@ -14,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,18 +25,27 @@ public class ApiCallHistoryService {
   private static final Logger logger = LoggerFactory.getLogger(ApiCallHistoryService.class);
 
   private final ApiCallHistoryRepository repository;
+  private final KafkaProducerService producerService;
   private final ObjectMapper mapper;
 
   public ApiCallHistoryService(
       ApiCallHistoryRepository apiCallHistoryRepository,
-      ObjectMapper mapper
+      KafkaProducerService producerService, ObjectMapper mapper
   ) {
     this.repository = apiCallHistoryRepository;
+    this.producerService = producerService;
     this.mapper = mapper;
   }
 
-  @Async
+  @Transactional
   public void saveApiCallHistory(
+      ApiCallHistoryMessage message
+  ) {
+    var history = new ApiCallHistory(message);
+    repository.save(history);
+  }
+
+  public void sendApiCallHistoryMessage(
       Object body,
       String requestUri,
       int status
@@ -43,8 +53,7 @@ public class ApiCallHistoryService {
     if (isServerError(status)) { // Solo los errores de la serie 4xx
       return;
     }
-    var apiCall = buildApiCallHistory(body, requestUri, status);
-    repository.save(apiCall);
+    producerService.sendMessage(buildApiCallHistory(body, requestUri, status));
   }
 
   @Transactional(readOnly = true)
@@ -57,8 +66,8 @@ public class ApiCallHistoryService {
         .map(ApiCallHistoryDto::new);
   }
 
-  private ApiCallHistory buildApiCallHistory(Object body, String requestUri, int status) {
-    var apiCall = new ApiCallHistory(requestUri, status);
+  private ApiCallHistoryMessage buildApiCallHistory(Object body, String requestUri, int status) {
+    var apiCall = new ApiCallHistoryMessage(requestUri, status);
     var bodyString = getBodyString(body);
     if (bodyString.isEmpty()) {
       return apiCall;

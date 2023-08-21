@@ -1,5 +1,6 @@
 package com.tenpo.challenge.model.entity;
 
+import com.tenpo.challenge.model.dto.ApiCallHistoryMessage;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -46,6 +47,14 @@ public class ApiCallHistory {
     this.createdDate = OffsetDateTime.now();
     this.requestPath = Objects.requireNonNull(requestPath);
     this.httpStatusCode = Objects.requireNonNull(httpStatusCode);
+  }
+
+  public ApiCallHistory(ApiCallHistoryMessage message) {
+    this.createdDate = message.getCreatedDate();
+    this.requestPath = message.getRequestPath();
+    this.responseBody = message.getResponseBody();
+    this.httpStatusCode = message.getHttpStatusCode();
+    this.errorMessage = message.getErrorMessage();
   }
 
   public OffsetDateTime getCreatedDate() {

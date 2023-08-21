@@ -47,7 +47,7 @@ public class ApiCallAdvice implements ResponseBodyAdvice<Object> {
     HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
     var requestUri = getRequestUriIfException(servletRequest)
         .orElse(addRequestParam(servletRequest.getRequestURI(), servletRequest));
-    service.saveApiCallHistory(body, requestUri, servletResponse.getStatus());
+    service.sendApiCallHistoryMessage(body, requestUri, servletResponse.getStatus());
     return body;
   }
 

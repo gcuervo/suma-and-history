@@ -64,4 +64,15 @@ class OperationServiceTest {
   }
 
   //TODO: testear si el operationStrategy retorna vacio
+
+  @Test
+  void givenEmptyReturn() {
+    var num1 = BigDecimal.valueOf(5);
+    var num2 = BigDecimal.valueOf(5);
+    given(twoNumOperationStrategy.getTwoNumBasicOpStrategy(null)).willReturn(Optional.empty());
+
+
+    assertThrows(RuntimeException.class, () -> underTest.executeSumOperation(num1, num2));
+
+  }
 }

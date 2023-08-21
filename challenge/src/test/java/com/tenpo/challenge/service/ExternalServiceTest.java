@@ -2,15 +2,15 @@ package com.tenpo.challenge.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tenpo.challenge.gateway.ExternalServiceGateway;
 import com.tenpo.challenge.model.dto.VariationDto;
+import com.tenpo.challenge.util.PercentageUtil;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -47,25 +48,34 @@ class ExternalServiceTest {
     // when
     var result = underTest.getPercentage();
     // then
-    assertEquals(BigDecimal.TEN.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP), result.get());
+    assertEquals(
+        BigDecimal.TEN.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP),
+        result.get()
+    );
   }
 
   @Test
-  void whenGetPercentageAndExternalServiceIsNotAvailableThenReturnLastPercentage() throws JsonProcessingException {
+  void whenGetPercentageAndExternalServiceIsNotAvailableThenReturnLastPercentage() {
     var cache = mock(Cache.class);
     var cacheWrapper = mock(Cache.ValueWrapper.class);
-    //var percentageUtil = mockStatic(PercentageUtil.class);
     var variation = new VariationDto();
     variation.setPercentage(BigDecimal.TEN);
     // given
     given(cacheManager.getCache("lastPercentage")).willReturn(cache);
     given(cache.get("staticKey")).willReturn(cacheWrapper);
-    given(mapper.readValue(anyString(), eq(VariationDto.class))).willReturn(variation);
-    given(cacheWrapper.get()).willReturn(BigDecimal.TEN);
-    // when
-    var result = underTest.recoverGetPercentage(new RuntimeException());
-    // then
-    assertEquals(Optional.of(BigDecimal.TEN.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)), result);
+    try (MockedStatic<PercentageUtil> mocked = mockStatic(PercentageUtil.class)) {
+      mocked.when(() -> PercentageUtil.getPercentageFraction(BigDecimal.TEN))
+          .thenReturn(BigDecimal.TEN.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+      mocked.when(() -> PercentageUtil.getVariationPercentage(any()))
+          .thenReturn(variation);
+      // when
+      var result = underTest.recoverGetPercentage(new RuntimeException());
+      // then
+      assertEquals(
+          BigDecimal.TEN.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP),
+          result.get()
+      );
+    }
   }
 
   @Test

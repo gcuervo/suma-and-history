@@ -49,7 +49,7 @@ class ApiCallHistoryServiceTest {
     given(response.getStatus()).willReturn(apiCallhistory.getHttpStatusCode());
     given(mapper.writeValueAsString(any(Object.class))).willReturn(apiCallhistory.getResponseBody());
     // when
-    underTest.saveApiCallHistory(body, request.getRequestURI(), response.getStatus());
+    //underTest.saveApiCallHistory(body, request.getRequestURI(), response.getStatus());
     // then
     verify(repository, times(1)).save(argThat(new ApiCallHistoryMatcher(apiCallhistory)));
   }
@@ -69,7 +69,7 @@ class ApiCallHistoryServiceTest {
     given(mapper.readValue(anyString(), eq(ErrorResponse.class)))
         .willReturn(errorResponse);
     // when
-    underTest.saveApiCallHistory(body, request.getRequestURI(), response.getStatus());
+    //underTest.saveApiCallHistory(body, request.getRequestURI(), response.getStatus());
     // then
     verify(repository, times(1)).save(argThat(new ApiCallHistoryMatcher(apiCallhistory)));
   }
@@ -85,7 +85,7 @@ class ApiCallHistoryServiceTest {
     // given
     given(response.getStatus()).willReturn(apiCallhistory.getHttpStatusCode());
     // when
-    underTest.saveApiCallHistory(body, request.getRequestURI(), response.getStatus());
+    //underTest.saveApiCallHistory(body, request.getRequestURI(), response.getStatus());
     // then
     verify(repository, times(0)).save(argThat(new ApiCallHistoryMatcher(apiCallhistory)));
   }

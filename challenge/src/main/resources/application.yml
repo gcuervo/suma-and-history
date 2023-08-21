@@ -1,4 +1,11 @@
 spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+      bootstrap-servers: localhost:9092
+      group-id: tenpo-group
+    producer:
+      bootstrap-servers: localhost:9092
   datasource:
     username: ${DATASOURCE_USERNAME}
     url: ${DATASOURCE_URL}
@@ -27,3 +34,7 @@ server:
 percentage-api:
   base-path: ${PERCENTAGE_API_BASE_PATH}
   percentage-path: ${PERCENTAGE_PATH}
+
+kafka:
+  topic:
+    name: history

@@ -15,13 +15,14 @@ services:
       - DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
       - DATASOURCE_USERNAME=postgres
       - DATASOURCE_PASSWORD=postgres
-      - PERCENTAGE_API_BASE_PATH=http://172.17.0.1:8082/api
+      - PERCENTAGE_API_BASE_PATH=http://percentage:8085/api
       - PERCENTAGE_PATH=/percentage
       - SPRING_REDIS_HOST=redis
     depends_on:
       - postgres
       - redis
-      
+      - kafka
+
   percentage:
     container_name: percentage
     image: percentage:1.0.0
@@ -29,7 +30,7 @@ services:
       context: ./percentage
       dockerfile: dockerfile
     ports:
-      - "8082:8082"
+      - "8085:8085"
 
   postgres:
     container_name: postgres
@@ -47,6 +48,24 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://172.17.0.1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
 
 
 volumes:
