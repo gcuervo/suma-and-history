@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    username: ${DATASOURCE_USERNAME}
+    url: ${DATASOURCE_URL}
+    password: ${DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    generate-ddl: true
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST}
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+        cache: DEBUG
+server:
+  error:
+    include-stacktrace: never
+  port: 8091
+
+percentage-api:
+  base-path: ${PERCENTAGE_API_BASE_PATH}
+  percentage-path: ${PERCENTAGE_PATH}
